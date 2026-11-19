@@ -15,9 +15,15 @@
             "role": "Developer"
         }
     ],
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/illimitar/jxrml-template-engine"
+        }
+    ],
     "require": {
         "php": "^7.3 || ^8.0",
-        "a2insights/jxrml-template-engine": "dev-main",
+        "a2insights/jxrml-template-engine": "dev-illi",
         "spatie/laravel-package-tools": "^1.16"
     },
     "require-dev": {
