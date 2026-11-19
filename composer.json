@@ -16,7 +16,7 @@
         }
     ],
     "require": {
-        "php": "^8.3",
+        "php": "^7.3 || ^8.0",
         "a2insights/jxrml-template-engine": "dev-main",
         "spatie/laravel-package-tools": "^1.16"
     },

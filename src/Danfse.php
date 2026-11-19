@@ -13,34 +13,48 @@ use ReflectionClass;
 
 final class Danfse
 {
-    private readonly JxrmlTemplateEngine $engine;
+    /** @var JxrmlTemplateEngine */
+    private $engine;
 
-    private readonly TemplateDataMapper $mapper;
+    /** @var TemplateDataMapper */
+    private $mapper;
 
+    /** @var string|null */
+    private $template;
+
+    /**
+     * @param JxrmlTemplateEngine|null $engine
+     * @param TemplateDataMapper|null $mapper
+     * @param string|null $template
+     */
     public function __construct(
         ?JxrmlTemplateEngine $engine = null,
         ?TemplateDataMapper $mapper = null,
-        private readonly ?string $template = null,
+        ?string $template = null
     ) {
+        $this->template = $template;
         $this->engine = $engine ?? new JxrmlTemplateEngine(new JxrmlRenderer(
-            fontDirectory: $this->jasperFontDirectory(),
+            null,
+            null,
+            $this->jasperFontDirectory()
         ));
-        $this->mapper = $mapper ?? new NfseTemplateMapper;
+        $this->mapper = $mapper ?? new NfseTemplateMapper();
     }
 
     /**
-     * @param  array<string, mixed>  $parameters
+     * @param mixed $nfse
+     * @param array<string, mixed> $parameters
      */
     public function render(
-        mixed $nfse,
+        $nfse,
         array $parameters = [],
         ?TemplateDataMapper $mapper = null,
-        ?string $template = null,
+        ?string $template = null
     ): string {
         $previousHandler = null;
         $previousHandler = set_error_handler(
             static function (int $severity, string $message, string $file, int $line) use (&$previousHandler): bool {
-                if (str_contains(str_replace('\\', '/', $file), '/quilhasoft/jasperphp/')) {
+                if (strpos(str_replace('\\', '/', $file), '/quilhasoft/jasperphp/') !== false) {
                     return true;
                 }
 
@@ -50,15 +64,16 @@ final class Danfse
 
                 return false;
             },
-            E_DEPRECATED,
+            E_DEPRECATED
         );
 
         try {
             return $this->engine->render(
-                template: $template ?? $this->templatePath(),
-                source: $nfse,
-                mapper: $mapper ?? $this->mapper,
-                parameters: $parameters,
+                $template ?? $this->templatePath(),
+                $nfse,
+                null,
+                $mapper ?? $this->mapper,
+                $parameters
             );
         } finally {
             restore_error_handler();

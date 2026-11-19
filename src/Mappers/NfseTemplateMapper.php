@@ -17,7 +17,7 @@ class NfseTemplateMapper implements TemplateDataMapper
      * @param  array<string, mixed>  $config
      * @return array<string, mixed>
      */
-    public function parameters(mixed $source, array $config): array
+    public function parameters($source, array $config): array
     {
         $payload = $this->array($this->value($source, 'payload_nfse', $source));
         $infNfse = $this->array($payload['infNfse'] ?? $payload);
@@ -126,7 +126,7 @@ class NfseTemplateMapper implements TemplateDataMapper
         return $parameters;
     }
 
-    public function rows(mixed $source, array $config): iterable
+    public function rows($source, array $config): iterable
     {
         return [['id' => 1]];
     }
@@ -136,12 +136,12 @@ class NfseTemplateMapper implements TemplateDataMapper
      *
      * @param  array<string, mixed>  $config
      */
-    protected function mapParameter(string $name, mixed $value, mixed $source, array $config): mixed
+    protected function mapParameter(string $name, $value, $source, array $config)
     {
         return $value;
     }
 
-    protected function value(mixed $source, string $path, mixed $default = null): mixed
+    protected function value($source, string $path, $default = null)
     {
         $value = $source;
 
@@ -165,7 +165,7 @@ class NfseTemplateMapper implements TemplateDataMapper
     /**
      * @return array<string, mixed>
      */
-    private function array(mixed $value): array
+    private function array($value): array
     {
         if (is_array($value)) {
             return $value;
@@ -174,34 +174,39 @@ class NfseTemplateMapper implements TemplateDataMapper
         return is_object($value) ? get_object_vars($value) : [];
     }
 
-    private function string(mixed $value): string
+    private function string($value): string
     {
-        if ($value instanceof BackedEnum) {
+        if (interface_exists(BackedEnum::class, false) && $value instanceof BackedEnum) {
             return (string) $value->value;
         }
 
         return is_scalar($value) ? (string) $value : '';
     }
 
-    private function digits(mixed $value): string
+    private function digits($value): string
     {
         return preg_replace('/\D+/', '', $this->string($value)) ?? '';
     }
 
-    private function money(mixed $value): string
+    private function money($value): string
     {
         return $value === null || $value === '' ? '' : number_format((float) $value, 2, ',', '.');
     }
 
-    private function cpfCnpj(mixed $value): string
+    private function cpfCnpj($value): string
     {
         $digits = $this->digits($value);
+        $tamanho = strlen($digits);
 
-        return match (strlen($digits)) {
-            11 => preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $digits) ?? $digits,
-            14 => preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $digits) ?? $digits,
-            default => $digits,
-        };
+        if ($tamanho === 11) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $digits) ?? $digits;
+        }
+
+        if ($tamanho === 14) {
+            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $digits) ?? $digits;
+        }
+
+        return $digits;
     }
 
     /**
@@ -214,10 +219,12 @@ class NfseTemplateMapper implements TemplateDataMapper
             $this->string($address['numero'] ?? ''),
             $this->string($address['complemento'] ?? ''),
             $this->string($address['bairro'] ?? ''),
-        ], static fn (string $part): bool => $part !== ''));
+        ], static function (string $part): bool {
+            return $part !== '';
+        }));
     }
 
-    private function date(mixed $value): string
+    private function date($value): string
     {
         return $this->formattedDate($value, 'd/m/Y');
     }
@@ -226,7 +233,7 @@ class NfseTemplateMapper implements TemplateDataMapper
      * @param  array<string, mixed>  $payload
      * @param  array<string, mixed>  $infNfse
      */
-    private function accessKey(mixed $source, array $payload, array $infNfse): string
+    private function accessKey($source, array $payload, array $infNfse): string
     {
         $key = $this->value(
             $source,
@@ -237,7 +244,7 @@ class NfseTemplateMapper implements TemplateDataMapper
         return $this->digits($key);
     }
 
-    private function publicConsultationUrl(mixed $source, string $accessKey): string
+    private function publicConsultationUrl($source, string $accessKey): string
     {
         $url = $this->string($this->value(
             $source,
@@ -262,10 +269,10 @@ class NfseTemplateMapper implements TemplateDataMapper
      * @param  array<string, mixed>  $emitenteEndereco
      */
     private function issuingMunicipality(
-        mixed $source,
+        $source,
         array $infNfse,
         array $codigoServico,
-        array $emitenteEndereco,
+        array $emitenteEndereco
     ): string {
         $override = $this->value(
             $source,
@@ -277,7 +284,7 @@ class NfseTemplateMapper implements TemplateDataMapper
             return $this->string($override);
         }
 
-        if (str_starts_with($this->digits($codigoServico['codigoTributacaoNacional'] ?? ''), '99')) {
+        if (strpos($this->digits($codigoServico['codigoTributacaoNacional'] ?? ''), '99') === 0) {
             return '';
         }
 
@@ -295,12 +302,12 @@ class NfseTemplateMapper implements TemplateDataMapper
         return "{$municipio} / {$estado}";
     }
 
-    private function dateTime(mixed $value): string
+    private function dateTime($value): string
     {
         return $this->formattedDate($value, 'd/m/Y H:i:s');
     }
 
-    private function formattedDate(mixed $value, string $format): string
+    private function formattedDate($value, string $format): string
     {
         if ($value instanceof DateTimeInterface) {
             return $value->format($format);
@@ -312,7 +319,7 @@ class NfseTemplateMapper implements TemplateDataMapper
 
         try {
             return (new DateTimeImmutable($value))->format($format);
-        } catch (Throwable) {
+        } catch (Throwable $e) {
             return $value;
         }
     }
