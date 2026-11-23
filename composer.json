@@ -15,18 +15,12 @@
             "role": "Developer"
         }
     ],
-    "repositories": {
-        "illimitar-jxrml-template-engine": {
-            "type": "vcs",
-            "url": "https://github.com/illimitar/jxrml-template-engine"
-        }
-    },
     "require": {
         "php": "^7.3 || ^8.0",
-        "a2insights/jxrml-template-engine": "dev-illi",
-        "spatie/laravel-package-tools": "^1.16"
+        "a2insights/jxrml-template-engine": "dev-illi"
     },
     "require-dev": {
+        "spatie/laravel-package-tools": "^1.16",
         "laravel/pint": "^1.14",
         "nunomaduro/collision": "^8.8",
         "larastan/larastan": "^3.0",
@@ -76,5 +70,12 @@
         }
     },
     "minimum-stability": "dev",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": {
+        "illimitar-jxrml-template-engine": {
+            "type": "vcs",
+            "url": "https://github.com/illimitar/jxrml-template-engine",
+            "no-api": true
+        }
+    }
 }
